@@ -1,0 +1,19 @@
+name: Build iPhone viewer
+on: [workflow_dispatch, push]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build device application
+        run: |
+          xcodebuild -project BanditPocket.xcodeproj -target BanditPocket -configuration Release -sdk iphoneos CONFIGURATION_BUILD_DIR="$RUNNER_TEMP/device" CODE_SIGNING_ALLOWED=NO build
+          mkdir Payload
+          cp -R "$RUNNER_TEMP/device/BanditPocket.app" Payload/
+          ditto -c -k --keepParent Payload BanditPocket.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BanditPocket-unsigned
+          path: BanditPocket.ipa
